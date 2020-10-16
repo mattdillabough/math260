@@ -1,6 +1,8 @@
 # Matt Dillabough - 10/13/2020
 
 def read_graph_data(fname):
+    """Creates a list of nodes and the adjaceny list for a graph
+       based on a textfile containing all of the nodes and edges"""
     graph = open(fname, "r")
     names = []
     adj = []

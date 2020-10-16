@@ -4,8 +4,7 @@ import matplotlib.pyplot as plt
 
 
 def power_method(a, steps, sol):
-    """ simple implementation of the power method, using a fixed
-        number of steps. Computes the error at each step and prints the error
+    """ Computes the error for the power method at each step and prints the error
         Args:
             a - the (n x n) matrix
             steps - the number of iterations to take
@@ -18,9 +17,9 @@ def power_method(a, steps, sol):
     x = random.rand(n)
     it = 0
 
-    while it < steps:  # other stopping conditions would go here
-        q = np.dot(a, x)  # compute a*x
-        x = q/np.sqrt(q.dot(q))  # normalize x to a unit vector
+    while it < steps:
+        q = np.dot(a, x)  # Compute a*x
+        x = q/np.sqrt(q.dot(q))  # Normalize x to a unit vector
 
         err = x - sol  # Find difference between solution and computed vector
         err = np.square(err)  # Square all elements in error vector
@@ -32,12 +31,16 @@ def power_method(a, steps, sol):
     return error
 
 
-if __name__ == "__main__":   # example from lecture (2x2 matrix)
+if __name__ == "__main__":
     a = np.array([[3, 1], [0, 2]])
     sol = [1, 0]
     error = power_method(a, 100, sol)
+    x = np.linspace(0, 100)
 
-    plt.plot(error)
+    plt.semilogy(error)
+    plt.semilogy(0.82**x)
     plt.ylabel("Error")
     plt.xlabel("Step")
     plt.show()
+
+    # Error ~= Cr^n where r is roughly 0.82
