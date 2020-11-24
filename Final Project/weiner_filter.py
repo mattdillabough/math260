@@ -12,10 +12,10 @@ def generate_noisy_file(fname):
     'noisy' file. Original sound is plotted over new noisy sound and new .wav file is
     written to code base.
     Input:
-        - fname: name of audio file
+        - fname: name of audio file (.wav)
     '''
     freq, data = wavfile.read(fname)
-    data = data/32768
+    data = data/32768  # Normalize audio signal
     RMS = np.sqrt(np.mean(data**2))
 
     # Generate gaussian 'white noise' and add to original signal
@@ -23,6 +23,7 @@ def generate_noisy_file(fname):
     signal = data + noise
 
     # Plot original signal over new 'noisy' signal
+    plt.figure()
     plt.plot(np.arange(len(signal))/freq, signal)
     plt.plot(np.arange(len(data))/freq, data)
     plt.title('Generated Noisy Signal')
@@ -39,7 +40,7 @@ def wiener_filter(audio, freq):
     '''
     Simple wiener filter audio noise reduction filter.
     Input:
-        - audio: unfiltered audio file
+        - audio: unfiltered audio file (.wav)
         - freq: sample rate (Hz)
     Returns:
         - output: filtered audio file
@@ -47,12 +48,13 @@ def wiener_filter(audio, freq):
 
     audio_length = audio.shape[0]
     # For signals with 16000Hz (standard), multiplying by 0.032 gives us desired 512 frames - could be adjusted
-    frame_size = int(np.ceil(0.032 * freq))
+    frame_size = int(freq / 512)
     nr_step = 3
     NFFT = 2 * frame_size
     # Hanning function smooths discontinuities at the beginning and end of signal
     han_win = np.hanning(frame_size + 2)[1:-1]
 
+    # 1/10 of frequency so we calculate average energy for multiple frames
     init_noise = int(0.1 * freq)
     nsum = np.zeros(NFFT)
 
@@ -100,8 +102,8 @@ def wiener_filter(audio, freq):
         # Recombine frequency domain signal mangitude with frequency domain signal phase
         s_frame_fft = mag_new * np.exp(s_frame_phase * 1j)
         # Output generates time domain signal from filtered frequency domain signal
-        output[begin:begin + NFFT] = output[begin:begin + NFFT] + \
-            (np.fft.ifft(s_frame_fft, NFFT)).real
+        ifft = np.fft.ifft(s_frame_fft, NFFT)
+        output[begin:begin + NFFT] = output[begin:begin + NFFT] + (ifft).real
 
     return output
 
@@ -111,7 +113,7 @@ def test(fname):
     Tester for wiener_filter() function which plots original vs. filtered
     audio files.
     Input:
-        - fname: Name of audio file to filter
+        - fname: Name of audio file to filter (.wav)
     '''
 
     # Read audio
@@ -119,6 +121,7 @@ def test(fname):
     freq, data = wavfile.read(audio_path)
 
     # Plot unfiltered audio file
+    plt.figure()
     plt.plot(np.arange(len(data))/freq, data)
     plt.title('Noisy vs Filtered Audio')
 
@@ -137,17 +140,18 @@ def test(fname):
 def compare(fname):
     '''
     Function which compares the filtered signal of 'noisy' audio to the original signal (without noise)
-    via a plot. 
+    via a plot.
     Input:
         - fname: file name of audio file (i.e. for t1.wav, 't1')
     '''
     originalPath = 'test_audio/' + fname + '.wav'
     oFreq, oData = wavfile.read(originalPath)
-    oData = oData/32768
+    oData = oData/32768  # Normalize audio signal
 
     filteredPath = 'outputs/' + fname + '_noisy_output.wav'
     fFreq, fData = wavfile.read(filteredPath)
 
+    plt.figure()
     plt.plot(np.arange(len(oData))/oFreq, oData)
     plt.plot(np.arange(len(fData))/fFreq, fData)
     plt.title('Original Signal vs Filtered Signal')
@@ -156,6 +160,12 @@ def compare(fname):
 
 
 if __name__ == '__main__':
+    # Example of entire process on t1.wav
+    generate_noisy_file('test_audio/t1.wav')
+    test('noisy_audio/t1_noisy.wav')
+    compare('t1')
+
+    # Compares results for all test audio files
     for i in range(1, 11):
         j = str(i)
         compare('t' + j)
